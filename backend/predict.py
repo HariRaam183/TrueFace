@@ -9,6 +9,10 @@ import tensorflow as tf
 # Disable GPU explicitly
 tf.config.set_visible_devices([], 'GPU')
 
+# Limit memory growth for stability
+tf.config.threading.set_intra_op_parallelism_threads(1)
+tf.config.threading.set_inter_op_parallelism_threads(1)
+
 import cv2
 import numpy as np
 import logging
@@ -22,8 +26,12 @@ MODEL_PATH = os.path.join(BASE_DIR, "model", "deepfake_model.h5")
 
 # Load model once at startup
 logger.info(f"Loading model from: {MODEL_PATH}")
-model = tf.keras.models.load_model(MODEL_PATH)
-logger.info("Model loaded successfully!")
+try:
+    model = tf.keras.models.load_model(MODEL_PATH, compile=False)
+    logger.info("Model loaded successfully!")
+except Exception as e:
+    logger.error(f"Failed to load model: {e}")
+    model = None
 
 def predict_image(img_path):
     """
@@ -31,6 +39,11 @@ def predict_image(img_path):
     Returns: (result, confidence_percentage)
     """
     try:
+        # Check if model loaded
+        if model is None:
+            logger.error("Model not loaded!")
+            return "ERROR", 0.0
+        
         # Read and preprocess image
         img = cv2.imread(img_path)
         
@@ -39,7 +52,7 @@ def predict_image(img_path):
             return "ERROR", 0.0
         
         img = cv2.resize(img, (128, 128))
-        img = img / 255.0
+        img = img.astype('float32') / 255.0
         img = np.reshape(img, (1, 128, 128, 3))
 
         # Get prediction
@@ -48,10 +61,10 @@ def predict_image(img_path):
         # Calculate confidence
         if prediction > 0.5:
             result = "FAKE"
-            confidence = prediction * 100
+            confidence = float(prediction) * 100
         else:
             result = "REAL"
-            confidence = (1 - prediction) * 100
+            confidence = (1 - float(prediction)) * 100
         
         logger.info(f"Prediction: {result} | Confidence: {confidence:.2f}% | File: {os.path.basename(img_path)}")
         
@@ -59,4 +72,6 @@ def predict_image(img_path):
     
     except Exception as e:
         logger.error(f"Prediction error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return "ERROR", 0.0

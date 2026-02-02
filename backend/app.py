@@ -129,34 +129,42 @@ def uploaded_file(filename):
 @app.route("/predict_api", methods=["POST"])
 @login_required
 def predict_api():
-    # Check if file exists
-    if "file" not in request.files:
-        return jsonify({"error": "No file uploaded"}), 400
-    
-    file = request.files["file"]
-    
-    if file.filename == "":
-        return jsonify({"error": "No file selected"}), 400
-    
-    # Validate file type
-    if not allowed_file(file.filename):
-        return jsonify({"error": "Invalid file type. Allowed: PNG, JPG, JPEG, GIF, WEBP"}), 400
-    
-    # Generate unique filename (security + prevent overwrites)
-    unique_filename = generate_unique_filename(file.filename)
-    file_path = os.path.join(UPLOAD_FOLDER, unique_filename)
-    file.save(file_path)
+    try:
+        # Check if file exists
+        if "file" not in request.files:
+            return jsonify({"error": "No file uploaded"}), 400
+        
+        file = request.files["file"]
+        
+        if file.filename == "":
+            return jsonify({"error": "No file selected"}), 400
+        
+        # Validate file type
+        if not allowed_file(file.filename):
+            return jsonify({"error": "Invalid file type. Allowed: PNG, JPG, JPEG, GIF, WEBP"}), 400
+        
+        # Generate unique filename (security + prevent overwrites)
+        unique_filename = generate_unique_filename(file.filename)
+        file_path = os.path.join(UPLOAD_FOLDER, unique_filename)
+        file.save(file_path)
 
-    # Get prediction with confidence
-    result, confidence = predict_image(file_path)
+        # Get prediction with confidence
+        result, confidence = predict_image(file_path)
+        
+        if result == "ERROR":
+            return jsonify({"error": "Failed to process image. Please try another image."}), 500
 
-    # Save in database with user_id
-    save_upload(unique_filename, result, confidence, session.get("user_id"))
+        # Save in database with user_id
+        save_upload(unique_filename, result, confidence, session.get("user_id"))
 
-    return jsonify({
-        "result": result,
-        "confidence": f"{confidence:.2f}%"
-    })
+        return jsonify({
+            "result": result,
+            "confidence": f"{confidence:.2f}%"
+        })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 # User's history
 @app.route("/history")
