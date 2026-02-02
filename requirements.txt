@@ -1,15 +1,6 @@
-# TrueFace - Requirements
-# Python 3.8+ required
-
-# Web Framework
-flask>=2.3.0
-werkzeug>=2.3.0
-
-# Machine Learning (TFLite - lightweight for deployment)
-tflite-runtime>=2.10.0
-opencv-python-headless>=4.7.0
-numpy>=1.23.0
-pillow>=9.0.0
-
-# Production Server (for deployment)
-gunicorn>=21.0.0
+flask>=2.2.0
+tensorflow==2.10.1
+opencv-python-headless
+numpy
+pillow
+gunicorn
