@@ -123,22 +123,22 @@
     <tr>
         <th>ID</th>
         <th>Image</th>
-        <th>Filename</th>
         <th>Result</th>
+        <th>Confidence</th>
         <th>Date & Time</th>
     </tr>
 
     {% for u in uploads %}
     <tr>
         <td>{{ u[0] }}</td>
-        <td><img src="/uploads/{{ u[1] }}"></td>
-        <td>{{ u[1] }}</td>
+        <td><img src="/uploads/{{ u[1] }}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%2280%22><rect fill=%22%23eee%22 width=%22100%22 height=%2280%22/><text x=%2250%22 y=%2245%22 text-anchor=%22middle%22 fill=%22%23999%22>No Image</text></svg>'"></td>
         <td>
             <span class="{% if u[2] == 'FAKE' %}result-fake{% else %}result-real{% endif %}">
-                {{ u[2] }}
+                {{ u[2] or 'Unknown' }}
             </span>
         </td>
-        <td>{{ u[3] }}</td>
+        <td>{% if u[3] is not none and u[3] is number %}{{ "%.1f"|format(u[3]) }}%{% else %}N/A{% endif %}</td>
+        <td>{{ u[4] or 'N/A' }}</td>
     </tr>
     {% endfor %}
 </table>

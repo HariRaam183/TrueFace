@@ -1,53 +1,170 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Admin Dashboard</title>
+    <title>Admin Dashboard - Deepfake Detection</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body {
-            font-family: Arial;
-            background: #f5f5f5;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            margin: 0;
             padding: 20px;
+            min-height: 100vh;
+            color: white;
         }
+
+        .navbar {
+            background: rgba(255,255,255,0.1);
+            padding: 15px 25px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            backdrop-filter: blur(10px);
+        }
+
+        .navbar h2 {
+            margin: 0;
+        }
+
+        .navbar a {
+            color: #4a90e2;
+            text-decoration: none;
+            margin-left: 20px;
+        }
+
+        .navbar .logout {
+            color: #e74c3c;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.1);
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-card h3 {
+            font-size: 36px;
+            margin: 0;
+            color: #4a90e2;
+        }
+
+        .stat-card p {
+            margin: 10px 0 0;
+            color: #aaa;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            background: white;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            overflow: hidden;
         }
+
         th, td {
-            padding: 10px;
-            border: 1px solid #ddd;
+            padding: 15px;
             text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
+
         th {
             background: #4a90e2;
-            color: white;
+            font-weight: 600;
         }
+
+        tr:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
         img {
-            width: 120px;
-            border-radius: 5px;
+            width: 80px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .result-real {
+            background: #27ae60;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+        }
+
+        .result-fake {
+            background: #e74c3c;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
         }
     </style>
 </head>
 <body>
 
-<h2>📊 Admin Upload History</h2>
+<div class="navbar">
+    <h2>🛡️ Admin Dashboard</h2>
+    <div>
+        <span>👤 {{ username }}</span>
+        <a href="/">Home</a>
+        <a href="/history">History</a>
+        <a href="/logout" class="logout">Logout</a>
+    </div>
+</div>
+
+<h1>📊 System Overview</h1>
+
+<div class="stats">
+    <div class="stat-card">
+        <h3>{{ uploads|length }}</h3>
+        <p>Total Uploads</p>
+    </div>
+    <div class="stat-card">
+        <h3>{{ uploads|selectattr(2, 'equalto', 'FAKE')|list|length }}</h3>
+        <p>Fake Detected</p>
+    </div>
+    <div class="stat-card">
+        <h3>{{ uploads|selectattr(2, 'equalto', 'REAL')|list|length }}</h3>
+        <p>Real Images</p>
+    </div>
+</div>
 
 <table>
     <tr>
         <th>ID</th>
         <th>Image</th>
-        <th>Filename</th>
-        <th>Prediction</th>
+        <th>Result</th>
+        <th>Confidence</th>
         <th>Date & Time</th>
+        <th>User ID</th>
     </tr>
 
     {% for u in uploads %}
     <tr>
         <td>{{ u[0] }}</td>
         <td><img src="/uploads/{{ u[1] }}"></td>
-        <td>{{ u[1] }}</td>
-        <td>{{ u[2] }}</td>
-        <td>{{ u[3] }}</td>
+        <td>
+            <span class="{% if u[2] == 'FAKE' %}result-fake{% else %}result-real{% endif %}">
+                {{ u[2] }}
+            </span>
+        </td>
+        <td>{{ "%.1f"|format(u[3]) if u[3] else 'N/A' }}%</td>
+        <td>{{ u[4] }}</td>
+        <td>{{ u[5] if u[5] else 'Guest' }}</td>
     </tr>
     {% endfor %}
 </table>

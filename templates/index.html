@@ -215,16 +215,23 @@ function checkImage() {
     .then(data => {
         if (data.error) {
             resultBox.className = "result-box fake";
-            resultBox.innerHTML = "Error: " + data.error;
+            resultBox.innerHTML = "❌ Error: " + data.error;
         } else {
             resultBox.className = "result-box " + (data.result === "FAKE" ? "fake" : "real");
-            resultBox.innerHTML = "Prediction Result: " + data.result;
+            resultBox.innerHTML = `
+                <div style="font-size: 24px; margin-bottom: 5px;">
+                    ${data.result === "FAKE" ? "⚠️" : "✅"} ${data.result}
+                </div>
+                <div style="font-size: 14px; opacity: 0.8;">
+                    Confidence: ${data.confidence}
+                </div>
+            `;
         }
         document.getElementById("resetBtn").style.display = "block";
     })
     .catch(error => {
         resultBox.className = "result-box fake";
-        resultBox.innerHTML = "Error: " + error.message;
+        resultBox.innerHTML = "❌ Error: " + error.message;
         console.error("Error:", error);
     });
 }

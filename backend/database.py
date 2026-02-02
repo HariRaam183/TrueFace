@@ -4,7 +4,7 @@ from datetime import datetime
 import hashlib
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DB_PATH = os.path.join(BASE_DIR, "uploads.db")
+DB_PATH = os.environ.get('DATABASE_PATH', os.path.join(BASE_DIR, "uploads.db"))
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
@@ -21,12 +21,13 @@ def init_db():
     )
     """)
 
-    # Uploads table
+    # Uploads table with confidence column
     c.execute("""
     CREATE TABLE IF NOT EXISTS uploads (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         filename TEXT,
         result TEXT,
+        confidence REAL,
         timestamp TEXT,
         user_id INTEGER
     )
@@ -79,14 +80,14 @@ def get_user_by_id(user_id):
 
 # ========== UPLOAD FUNCTIONS ==========
 
-def save_upload(filename, result, user_id=None):
+def save_upload(filename, result, confidence, user_id=None):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    c.execute("INSERT INTO uploads (filename, result, timestamp, user_id) VALUES (?, ?, ?, ?)",
-              (filename, result, timestamp, user_id))
+    c.execute("INSERT INTO uploads (filename, result, confidence, timestamp, user_id) VALUES (?, ?, ?, ?, ?)",
+              (filename, result, confidence, timestamp, user_id))
 
     conn.commit()
     conn.close()
@@ -106,3 +107,29 @@ def get_user_uploads(user_id):
     data = c.fetchall()
     conn.close()
     return data
+
+def get_stats():
+    """Get statistics for admin dashboard"""
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    
+    c.execute("SELECT COUNT(*) FROM uploads")
+    total_uploads = c.fetchone()[0]
+    
+    c.execute("SELECT COUNT(*) FROM uploads WHERE result = 'FAKE'")
+    fake_count = c.fetchone()[0]
+    
+    c.execute("SELECT COUNT(*) FROM uploads WHERE result = 'REAL'")
+    real_count = c.fetchone()[0]
+    
+    c.execute("SELECT COUNT(*) FROM users")
+    total_users = c.fetchone()[0]
+    
+    conn.close()
+    
+    return {
+        "total_uploads": total_uploads,
+        "fake_count": fake_count,
+        "real_count": real_count,
+        "total_users": total_users
+    }
