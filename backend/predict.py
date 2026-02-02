@@ -1,18 +1,4 @@
 import os
-
-# ===== FORCE CPU ONLY (for Render/Heroku deployment) =====
-os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Suppress TF warnings
-
-import tensorflow as tf
-
-# Disable GPU explicitly
-tf.config.set_visible_devices([], 'GPU')
-
-# Limit memory growth for stability
-tf.config.threading.set_intra_op_parallelism_threads(1)
-tf.config.threading.set_inter_op_parallelism_threads(1)
-
 import cv2
 import numpy as np
 import logging
@@ -21,26 +7,47 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MODEL_PATH = os.path.join(BASE_DIR, "model", "deepfake_model.h5")
-
-# Load model once at startup
-logger.info(f"Loading model from: {MODEL_PATH}")
+# ===== TensorFlow Lite Runtime (Much lighter than full TensorFlow) =====
 try:
-    model = tf.keras.models.load_model(MODEL_PATH, compile=False)
-    logger.info("Model loaded successfully!")
+    # Try tflite_runtime first (lighter, for deployment)
+    from tflite_runtime.interpreter import Interpreter
+    logger.info("Using tflite_runtime")
+except ImportError:
+    # Fall back to full TensorFlow's lite interpreter
+    import tensorflow as tf
+    Interpreter = tf.lite.Interpreter
+    logger.info("Using tensorflow.lite")
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+MODEL_PATH = os.path.join(BASE_DIR, "model", "deepfake_model.tflite")
+
+# Load TFLite model once at startup
+logger.info(f"Loading TFLite model from: {MODEL_PATH}")
+try:
+    interpreter = Interpreter(model_path=MODEL_PATH)
+    interpreter.allocate_tensors()
+    
+    # Get input and output details
+    input_details = interpreter.get_input_details()
+    output_details = interpreter.get_output_details()
+    
+    logger.info("TFLite model loaded successfully!")
+    logger.info(f"Input shape: {input_details[0]['shape']}")
 except Exception as e:
     logger.error(f"Failed to load model: {e}")
-    model = None
+    interpreter = None
+    input_details = None
+    output_details = None
+
 
 def predict_image(img_path):
     """
-    Predict if an image is REAL or FAKE
+    Predict if an image is REAL or FAKE using TFLite
     Returns: (result, confidence_percentage)
     """
     try:
         # Check if model loaded
-        if model is None:
+        if interpreter is None:
             logger.error("Model not loaded!")
             return "ERROR", 0.0
         
@@ -51,12 +58,15 @@ def predict_image(img_path):
             logger.error(f"Failed to read image: {img_path}")
             return "ERROR", 0.0
         
+        # Preprocess: resize, normalize, reshape
         img = cv2.resize(img, (128, 128))
-        img = img.astype('float32') / 255.0
-        img = np.reshape(img, (1, 128, 128, 3))
+        img = img.astype(np.float32) / 255.0
+        img = np.expand_dims(img, axis=0)  # Shape: (1, 128, 128, 3)
 
-        # Get prediction
-        prediction = model.predict(img, verbose=0)[0][0]
+        # Run inference
+        interpreter.set_tensor(input_details[0]['index'], img)
+        interpreter.invoke()
+        prediction = interpreter.get_tensor(output_details[0]['index'])[0][0]
         
         # Calculate confidence
         if prediction > 0.5:
