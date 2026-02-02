@@ -1,4 +1,4 @@
-# Deepfake Detection - Requirements
+# TrueFace - Requirements
 # Python 3.8+ required
 
 # Web Framework

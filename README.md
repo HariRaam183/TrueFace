@@ -1,6 +1,6 @@
-# 🧠 Deepfake Detection System
+# 🧠 TrueFace - AI Deepfake Detector
 
-A full-stack deepfake detection application using deep learning and React.
+A full-stack AI-powered deepfake detection application using deep learning.
 
 ## Project Structure
 
@@ -55,6 +55,7 @@ python train_model.py
 cd backend
 python app.py
 ```
+
 - The prediction API runs at: `POST /predict_api`
 - The admin dashboard is accessible at: [http://localhost:5000/admin](http://localhost:5000/admin)
 
