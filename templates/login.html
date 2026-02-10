@@ -4,170 +4,340 @@
     <title>Login - TrueFace</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0f4ff 0%, #e8eef5 50%, #f5f7fa 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
         }
+
+        /* Dot grid pattern */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: radial-gradient(circle, rgba(102, 126, 234, 0.12) 1px, transparent 1px);
+            background-size: 32px 32px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Face scan - right side */
+        .bg-face-scan {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 420px;
+            height: 520px;
+            opacity: 0.18;
+            z-index: 0;
+            pointer-events: none;
+            animation: floatRight 8s ease-in-out infinite;
+        }
+        @keyframes floatRight {
+            0%, 100% { transform: translateY(-50%) translateX(0); }
+            50% { transform: translateY(-50%) translateX(-10px); }
+        }
+
+        /* Binary watermark - left */
+        .bg-binary {
+            position: fixed;
+            left: 20px; top: 0;
+            width: 60px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: #667eea;
+            opacity: 0.15;
+            line-height: 1.8;
+            word-break: break-all;
+            z-index: 0;
+            pointer-events: none;
+            writing-mode: vertical-rl;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Neural network */
+        .bg-network {
+            position: fixed;
+            left: 0; top: 0; width: 100%; height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Animated horizontal scan line */
+        .bg-scanline {
+            position: fixed;
+            left: 0; top: 0;
+            width: 100%; height: 3px;
+            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.5), rgba(118, 75, 162, 0.5), transparent);
+            z-index: 1;
+            pointer-events: none;
+            animation: scanSweep 4s ease-in-out infinite;
+        }
+        @keyframes scanSweep {
+            0% { top: -3px; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+
+        /* DNA helix - left */
+        .bg-dna {
+            position: fixed;
+            left: 80px; top: 50%;
+            transform: translateY(-50%);
+            width: 100px; height: 600px;
+            opacity: 0.12;
+            z-index: 0;
+            pointer-events: none;
+            animation: floatLeft 10s ease-in-out infinite;
+        }
+        @keyframes floatLeft {
+            0%, 100% { transform: translateY(-50%) translateX(0); }
+            50% { transform: translateY(-50%) translateX(8px); }
+        }
+
+        /* Corner tech brackets */
+        .corner-deco {
+            position: fixed;
+            width: 120px; height: 120px;
+            opacity: 0.22;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .corner-deco.tl { top: 20px; left: 20px; }
+        .corner-deco.tr { top: 20px; right: 20px; transform: scaleX(-1); }
+        .corner-deco.bl { bottom: 20px; left: 20px; transform: scaleY(-1); }
+        .corner-deco.br { bottom: 20px; right: 20px; transform: scale(-1, -1); }
 
         .container {
-            background: white;
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-            width: 90%;
-            max-width: 400px;
-            animation: fadeIn 0.5s ease;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(20px);
+            padding: 50px 45px;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(102, 126, 234, 0.12), 0 1px 3px rgba(0, 0, 0, 0.05);
+            width: 100%; max-width: 480px;
+            animation: slideUp 0.8s ease-out;
+            position: relative;
+            z-index: 10;
+            border: 1px solid rgba(102, 126, 234, 0.1);
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-20px); }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(50px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .logo {
-            text-align: center;
-            margin-bottom: 30px;
-        }
+        .logo { text-align: center; margin-bottom: 40px; }
+        .logo-icon { font-size: 56px; margin-bottom: 18px; display: block; animation: pulse 3s ease-in-out infinite; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+        .logo h1 { color: #1a1a2e; font-size: 32px; font-weight: 800; margin-bottom: 8px; letter-spacing: -1px; }
+        .logo h1 span { background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .logo p { color: #7f8c8d; font-size: 14px; font-weight: 600; letter-spacing: 0.5px; }
 
-        .logo h1 {
-            color: #333;
-            font-size: 24px;
-        }
+        .form-group { margin-bottom: 24px; animation: fadeInUp 0.6s ease-out both; }
+        .form-group:nth-child(1) { animation-delay: 0.15s; }
+        .form-group:nth-child(2) { animation-delay: 0.3s; }
+        .form-group:nth-child(3) { animation-delay: 0.45s; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(25px); } to { opacity: 1; transform: translateY(0); } }
+        .form-group label { display: block; margin-bottom: 12px; color: #2c3e50; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
+        .form-group input { width: 100%; padding: 15px 18px; border: 2px solid #e8eef5; border-radius: 14px; font-size: 15px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); background: #f8fafc; color: #2c3e50; font-weight: 500; }
+        .form-group input::placeholder { color: #bdc3c7; font-weight: 400; }
+        .form-group input:focus { outline: none; border-color: #667eea; background: white; box-shadow: 0 0 0 5px rgba(102, 126, 234, 0.1); transform: translateY(-2px); }
 
-        .logo span {
-            color: #667eea;
-        }
+        .btn { width: 100%; padding: 16px 20px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; letter-spacing: 0.5px; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); margin-top: 15px; box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3); animation: fadeInUp 0.6s ease-out 0.45s both; position: relative; overflow: hidden; }
+        .btn::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: rgba(255,255,255,0.2); transition: left 0.4s ease; }
+        .btn:hover::before { left: 100%; }
+        .btn:hover { transform: translateY(-4px); box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4); }
+        .btn:active { transform: translateY(-1px); }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
+        .error { background: linear-gradient(135deg, #ff6b6b, #ee5a6f); color: white; padding: 16px 18px; border-radius: 14px; margin-bottom: 20px; text-align: center; font-weight: 600; animation: shake 0.5s ease-in-out; box-shadow: 0 5px 20px rgba(255,107,107,0.3); border-left: 4px solid rgba(255,255,255,0.5); }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-12px); } 75% { transform: translateX(12px); } }
 
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #555;
-            font-weight: 500;
-        }
+        .divider { display: flex; align-items: center; margin: 32px 0; opacity: 0.7; }
+        .divider::before, .divider::after { content: ''; flex: 1; height: 1.5px; background: linear-gradient(90deg, transparent, #dde4ee, transparent); }
+        .divider span { padding: 0 16px; color: #95a5a6; font-size: 12px; font-weight: 700; letter-spacing: 1px; }
 
-        .form-group input {
-            width: 100%;
-            padding: 14px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
-
-        .form-group input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .btn {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .error {
-            background: #ffe6e6;
-            color: #d63031;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .links {
-            text-align: center;
-            margin-top: 25px;
-        }
-
-        .links a {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .links a:hover {
-            text-decoration: underline;
-        }
-
-        .divider {
-            display: flex;
-            align-items: center;
-            margin: 20px 0;
-        }
-
-        .divider::before,
-        .divider::after {
-            content: "";
-            flex: 1;
-            border-bottom: 1px solid #e0e0e0;
-        }
-
-        .divider span {
-            padding: 0 10px;
-            color: #999;
-            font-size: 14px;
-        }
+        .links { text-align: center; animation: fadeInUp 0.6s ease-out 0.6s both; }
+        .links p { color: #7f8c8d; font-size: 15px; margin: 0; font-weight: 500; }
+        .links a { color: #667eea; text-decoration: none; font-weight: 800; transition: all 0.3s ease; position: relative; display: inline-block; }
+        .links a::after { content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 3px; background: linear-gradient(90deg, #667eea, #764ba2); transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 2px; }
+        .links a:hover { color: #764ba2; }
+        .links a:hover::after { width: 100%; }
     </style>
 </head>
 <body>
 
+<!-- Animated scan line -->
+<div class="bg-scanline"></div>
+
+<!-- Corner tech brackets -->
+<svg class="corner-deco tl" viewBox="0 0 120 120" fill="none">
+    <polyline points="0,40 0,0 40,0" stroke="#667eea" stroke-width="2.5" fill="none"/>
+    <polyline points="0,30 0,10 20,10" stroke="#764ba2" stroke-width="1" fill="none" stroke-dasharray="4,3"/>
+    <circle cx="5" cy="5" r="3" fill="#667eea" opacity="0.6"/>
+    <text x="12" y="55" fill="#667eea" font-size="7" font-family="monospace" opacity="0.7">SCAN</text>
+    <text x="12" y="65" fill="#667eea" font-size="7" font-family="monospace" opacity="0.7">MODE</text>
+</svg>
+<svg class="corner-deco tr" viewBox="0 0 120 120" fill="none">
+    <polyline points="0,40 0,0 40,0" stroke="#667eea" stroke-width="2.5" fill="none"/>
+    <polyline points="0,30 0,10 20,10" stroke="#764ba2" stroke-width="1" fill="none" stroke-dasharray="4,3"/>
+    <circle cx="5" cy="5" r="3" fill="#e74c3c" opacity="0.6"/>
+</svg>
+<svg class="corner-deco bl" viewBox="0 0 120 120" fill="none">
+    <polyline points="0,40 0,0 40,0" stroke="#667eea" stroke-width="2.5" fill="none"/>
+    <circle cx="5" cy="5" r="3" fill="#667eea" opacity="0.6"/>
+</svg>
+<svg class="corner-deco br" viewBox="0 0 120 120" fill="none">
+    <polyline points="0,40 0,0 40,0" stroke="#667eea" stroke-width="2.5" fill="none"/>
+    <circle cx="5" cy="5" r="3" fill="#764ba2" opacity="0.6"/>
+</svg>
+
+<!-- Face Scan SVG - right -->
+<svg class="bg-face-scan" viewBox="0 0 200 260" fill="none">
+    <!-- Frame brackets -->
+    <polyline points="20,20 20,5 40,5" stroke="#667eea" stroke-width="2.5" fill="none"/>
+    <polyline points="160,5 180,5 180,20" stroke="#667eea" stroke-width="2.5" fill="none"/>
+    <polyline points="20,240 20,255 40,255" stroke="#667eea" stroke-width="2.5" fill="none"/>
+    <polyline points="160,255 180,255 180,240" stroke="#667eea" stroke-width="2.5" fill="none"/>
+    <!-- Face -->
+    <ellipse cx="100" cy="120" rx="62" ry="80" stroke="#667eea" stroke-width="1.5"/>
+    <ellipse cx="100" cy="120" rx="55" ry="72" stroke="#764ba2" stroke-width="0.5" stroke-dasharray="4,3"/>
+    <!-- Eyes -->
+    <ellipse cx="75" cy="105" rx="15" ry="8" stroke="#667eea" stroke-width="1"/>
+    <ellipse cx="125" cy="105" rx="15" ry="8" stroke="#667eea" stroke-width="1"/>
+    <circle cx="75" cy="105" r="5" fill="#667eea" opacity="0.25"/>
+    <circle cx="125" cy="105" r="5" fill="#667eea" opacity="0.25"/>
+    <circle cx="75" cy="105" r="2" fill="#667eea" opacity="0.5"/>
+    <circle cx="125" cy="105" r="2" fill="#667eea" opacity="0.5"/>
+    <!-- Eyebrows -->
+    <path d="M 60 93 Q 75 87 90 93" stroke="#667eea" stroke-width="0.8" fill="none"/>
+    <path d="M 110 93 Q 125 87 140 93" stroke="#667eea" stroke-width="0.8" fill="none"/>
+    <!-- Nose & Mouth -->
+    <path d="M 95 112 Q 100 138 105 112" stroke="#667eea" stroke-width="0.8" fill="none"/>
+    <line x1="92" y1="135" x2="108" y2="135" stroke="#667eea" stroke-width="0.6"/>
+    <path d="M 80 150 Q 100 162 120 150" stroke="#667eea" stroke-width="1" fill="none"/>
+    <!-- Scan lines -->
+    <line x1="30" y1="75" x2="170" y2="75" stroke="#667eea" stroke-width="0.5" stroke-dasharray="6,4"/>
+    <line x1="30" y1="95" x2="170" y2="95" stroke="#764ba2" stroke-width="0.3" stroke-dasharray="4,6"/>
+    <line x1="30" y1="115" x2="170" y2="115" stroke="#667eea" stroke-width="0.5" stroke-dasharray="6,4"/>
+    <line x1="30" y1="135" x2="170" y2="135" stroke="#764ba2" stroke-width="0.3" stroke-dasharray="4,6"/>
+    <line x1="30" y1="155" x2="170" y2="155" stroke="#667eea" stroke-width="0.5" stroke-dasharray="6,4"/>
+    <!-- Crosshair -->
+    <line x1="85" y1="120" x2="115" y2="120" stroke="#e74c3c" stroke-width="0.8"/>
+    <line x1="100" y1="105" x2="100" y2="135" stroke="#e74c3c" stroke-width="0.8"/>
+    <circle cx="100" cy="120" r="22" stroke="#e74c3c" stroke-width="0.7" stroke-dasharray="4,3">
+        <animateTransform attributeName="transform" type="rotate" from="0 100 120" to="360 100 120" dur="12s" repeatCount="indefinite"/>
+    </circle>
+    <!-- Data points & mapping lines -->
+    <circle cx="50" cy="85" r="3" fill="#667eea" opacity="0.4"/>
+    <circle cx="150" cy="85" r="3" fill="#667eea" opacity="0.4"/>
+    <circle cx="50" cy="155" r="3" fill="#667eea" opacity="0.4"/>
+    <circle cx="150" cy="155" r="3" fill="#667eea" opacity="0.4"/>
+    <circle cx="100" cy="50" r="3" fill="#764ba2" opacity="0.4"/>
+    <circle cx="100" cy="200" r="3" fill="#764ba2" opacity="0.4"/>
+    <line x1="50" y1="85" x2="75" y2="105" stroke="#667eea" stroke-width="0.5" opacity="0.6"/>
+    <line x1="150" y1="85" x2="125" y2="105" stroke="#667eea" stroke-width="0.5" opacity="0.6"/>
+    <line x1="75" y1="105" x2="100" y2="130" stroke="#764ba2" stroke-width="0.4" opacity="0.5"/>
+    <line x1="125" y1="105" x2="100" y2="130" stroke="#764ba2" stroke-width="0.4" opacity="0.5"/>
+    <line x1="100" y1="130" x2="80" y2="150" stroke="#667eea" stroke-width="0.4" opacity="0.5"/>
+    <line x1="100" y1="130" x2="120" y2="150" stroke="#667eea" stroke-width="0.4" opacity="0.5"/>
+    <!-- Labels -->
+    <rect x="30" y="220" width="60" height="16" rx="3" fill="#667eea" opacity="0.15"/>
+    <text x="36" y="231" fill="#667eea" font-size="8" font-family="monospace" opacity="0.8">AI SCAN</text>
+    <rect x="110" y="220" width="65" height="16" rx="3" fill="#e74c3c" opacity="0.12"/>
+    <text x="115" y="231" fill="#e74c3c" font-size="8" font-family="monospace" opacity="0.7">ANALYZE</text>
+    <!-- Animated scanning bar -->
+    <line x1="25" y1="50" x2="175" y2="50" stroke="#667eea" stroke-width="1.5" opacity="0.6">
+        <animate attributeName="y1" values="50;210;50" dur="3s" repeatCount="indefinite"/>
+        <animate attributeName="y2" values="50;210;50" dur="3s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.6;0.15;0.6" dur="3s" repeatCount="indefinite"/>
+    </line>
+</svg>
+
+<!-- DNA Helix - left -->
+<svg class="bg-dna" viewBox="0 0 60 400" fill="none">
+    <path d="M 10 0 Q 50 25 10 50 Q -30 75 10 100 Q 50 125 10 150 Q -30 175 10 200 Q 50 225 10 250 Q -30 275 10 300 Q 50 325 10 350 Q -30 375 10 400" stroke="#667eea" stroke-width="1.2" fill="none"/>
+    <path d="M 50 0 Q 10 25 50 50 Q 90 75 50 100 Q 10 125 50 150 Q 90 175 50 200 Q 10 225 50 250 Q 90 275 50 300 Q 10 325 50 350 Q 90 375 50 400" stroke="#764ba2" stroke-width="1.2" fill="none"/>
+    <line x1="18" y1="25" x2="42" y2="25" stroke="#667eea" stroke-width="0.8" opacity="0.5"/>
+    <line x1="10" y1="50" x2="50" y2="50" stroke="#764ba2" stroke-width="0.8" opacity="0.5"/>
+    <line x1="18" y1="75" x2="42" y2="75" stroke="#667eea" stroke-width="0.8" opacity="0.5"/>
+    <line x1="10" y1="100" x2="50" y2="100" stroke="#764ba2" stroke-width="0.8" opacity="0.5"/>
+    <line x1="18" y1="125" x2="42" y2="125" stroke="#667eea" stroke-width="0.8" opacity="0.5"/>
+    <line x1="10" y1="150" x2="50" y2="150" stroke="#764ba2" stroke-width="0.8" opacity="0.5"/>
+    <line x1="18" y1="175" x2="42" y2="175" stroke="#667eea" stroke-width="0.8" opacity="0.5"/>
+    <line x1="10" y1="200" x2="50" y2="200" stroke="#764ba2" stroke-width="0.8" opacity="0.5"/>
+    <circle cx="30" cy="25" r="2.5" fill="#667eea" opacity="0.5"/>
+    <circle cx="30" cy="75" r="2.5" fill="#764ba2" opacity="0.5"/>
+    <circle cx="30" cy="125" r="2.5" fill="#667eea" opacity="0.5"/>
+    <circle cx="30" cy="175" r="2.5" fill="#764ba2" opacity="0.5"/>
+    <circle cx="30" cy="225" r="2.5" fill="#667eea" opacity="0.5"/>
+    <circle cx="30" cy="275" r="2.5" fill="#764ba2" opacity="0.5"/>
+</svg>
+
+<!-- Binary watermark -->
+<div class="bg-binary">01001001 01101101 01100001 01100111 01100101 00100000 01000001 01101110 01100001 01101100 01111001 01110011 01101001 01110011 00100000 01000100 01100101 01100101 01110000 01100110 01100001 01101011 01100101 00100000 01000100 01100101 01110100 01100101 01100011 01110100 01101001 01101111 01101110</div>
+
+<!-- Neural network -->
+<svg class="bg-network" viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid slice">
+    <line x1="80" y1="120" x2="200" y2="200" stroke="#667eea" stroke-width="0.8" opacity="0.1"/>
+    <line x1="200" y1="200" x2="350" y2="150" stroke="#667eea" stroke-width="0.8" opacity="0.1"/>
+    <line x1="200" y1="200" x2="320" y2="350" stroke="#667eea" stroke-width="0.8" opacity="0.08"/>
+    <line x1="350" y1="150" x2="500" y2="250" stroke="#764ba2" stroke-width="0.8" opacity="0.08"/>
+    <line x1="700" y1="100" x2="850" y2="200" stroke="#764ba2" stroke-width="0.8" opacity="0.1"/>
+    <line x1="850" y1="200" x2="900" y2="400" stroke="#764ba2" stroke-width="0.8" opacity="0.08"/>
+    <line x1="600" y1="500" x2="750" y2="450" stroke="#667eea" stroke-width="0.8" opacity="0.08"/>
+    <line x1="750" y1="450" x2="900" y2="400" stroke="#667eea" stroke-width="0.8" opacity="0.1"/>
+    <circle cx="80" cy="120" r="5" fill="#667eea" opacity="0.15"/>
+    <circle cx="200" cy="200" r="6" fill="#667eea" opacity="0.15"/>
+    <circle cx="350" cy="150" r="5" fill="#764ba2" opacity="0.15"/>
+    <circle cx="500" cy="250" r="6" fill="#764ba2" opacity="0.15"/>
+    <circle cx="700" cy="100" r="5" fill="#667eea" opacity="0.15"/>
+    <circle cx="850" cy="200" r="6" fill="#764ba2" opacity="0.15"/>
+    <circle cx="900" cy="400" r="5" fill="#667eea" opacity="0.12"/>
+    <circle cx="600" cy="500" r="4" fill="#764ba2" opacity="0.12"/>
+    <circle cx="750" cy="450" r="5" fill="#667eea" opacity="0.12"/>
+    <!-- Pulsing node -->
+    <circle cx="500" cy="250" r="10" stroke="#764ba2" stroke-width="0.5" fill="none" opacity="0.2">
+        <animate attributeName="r" values="10;18;10" dur="3s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.2;0.05;0.2" dur="3s" repeatCount="indefinite"/>
+    </circle>
+</svg>
+
 <div class="container">
     <div class="logo">
-        <h1>🛡️ <span>True</span>Face</h1>
-        <p style="color: #888; margin-top: 5px;">Login to your account</p>
+        <span class="logo-icon">🛡️</span>
+        <h1><span>True</span>Face</h1>
+        <p>AI-Powered Deepfake Detection</p>
     </div>
 
     {% if error %}
-    <div class="error">{{ error }}</div>
+    <div class="error">⚠️ {{ error }}</div>
     {% endif %}
 
     <form method="POST" action="/login">
         <div class="form-group">
-            <label>Username</label>
-            <input type="text" name="username" placeholder="Enter your username" required>
+            <label for="username">👤 Username</label>
+            <input type="text" id="username" name="username" placeholder="Enter your username" required>
         </div>
-
         <div class="form-group">
-            <label>Password</label>
-            <input type="password" name="password" placeholder="Enter your password" required>
+            <label for="password">🔐 Password</label>
+            <input type="password" id="password" name="password" placeholder="Enter your password" required>
         </div>
-
-        <button type="submit" class="btn">🔐 Login</button>
+        <button type="submit" class="btn">Login Now</button>
     </form>
 
-    <div class="divider">
-        <span>OR</span>
-    </div>
-
-    <div class="links">
-        <p>Don't have an account? <a href="/signup">Sign Up</a></p>
-    </div>
+    <div class="divider"><span>NEW HERE?</span></div>
+    <div class="links"><p>Don't have an account? <a href="/signup">Sign Up</a></p></div>
 </div>
 
 </body>

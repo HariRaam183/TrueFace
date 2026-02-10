@@ -1,0 +1,50 @@
+# Git
+
+.git
+.gitignore
+
+# Python
+
+**pycache**
+_.pyc
+_.pyo
+_.pyd
+.Python
+.venv
+venv
+env
+_.egg-info
+
+# IDE
+
+.vscode
+.idea
+_.swp
+_.swo
+
+# Testing
+
+.pytest_cache
+.coverage
+htmlcov
+
+# Local files
+
+_.log
+_.db
+.env
+.env.local
+
+# Uploads (will be mounted as volume)
+
+uploads/\*
+!uploads/.gitkeep
+
+# Documentation
+
+\*.md
+!README.md
+
+# Conversion script (not needed in production)
+
+convert_to_tflite.py

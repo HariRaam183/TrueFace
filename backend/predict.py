@@ -21,6 +21,11 @@ except ImportError:
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MODEL_PATH = os.path.join(BASE_DIR, "model", "deepfake_model.tflite")
 
+# Load face detection cascade
+FACE_CASCADE_PATH = cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
+face_cascade = cv2.CascadeClassifier(FACE_CASCADE_PATH)
+logger.info("Face detection cascade loaded")
+
 # Load TFLite model once at startup
 logger.info(f"Loading TFLite model from: {MODEL_PATH}")
 try:
@@ -40,6 +45,43 @@ except Exception as e:
     output_details = None
 
 
+def detect_and_crop_face(img):
+    """
+    Detect face in image and crop it.
+    Returns cropped face or original image if no face detected.
+    """
+    try:
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        faces = face_cascade.detectMultiScale(
+            gray, 
+            scaleFactor=1.1, 
+            minNeighbors=5, 
+            minSize=(30, 30)
+        )
+        
+        if len(faces) > 0:
+            # Get the largest face
+            largest_face = max(faces, key=lambda f: f[2] * f[3])
+            x, y, w, h = largest_face
+            
+            # Add padding around the face (20%)
+            padding = int(0.2 * max(w, h))
+            x = max(0, x - padding)
+            y = max(0, y - padding)
+            w = min(img.shape[1] - x, w + 2 * padding)
+            h = min(img.shape[0] - y, h + 2 * padding)
+            
+            face_crop = img[y:y+h, x:x+w]
+            logger.info(f"Face detected and cropped: {w}x{h}")
+            return face_crop, True
+        else:
+            logger.info("No face detected, using full image")
+            return img, False
+    except Exception as e:
+        logger.warning(f"Face detection failed: {e}, using full image")
+        return img, False
+
+
 def predict_image(img_path):
     """
     Predict if an image is REAL or FAKE using TFLite
@@ -49,22 +91,30 @@ def predict_image(img_path):
         # Check if model loaded
         if interpreter is None:
             logger.error("Model not loaded!")
-            return "ERROR", 0.0
+            return "MODEL_ERROR", 0.0
         
-        # Read and preprocess image
+        # Read image
         img = cv2.imread(img_path)
         
         if img is None:
             logger.error(f"Failed to read image: {img_path}")
-            return "ERROR", 0.0
+            return "READ_ERROR", 0.0
+        
+        # Check if image is too small
+        if img.shape[0] < 50 or img.shape[1] < 50:
+            logger.error(f"Image too small: {img.shape}")
+            return "SIZE_ERROR", 0.0
+        
+        # Detect and crop face (improves accuracy)
+        face_img, face_detected = detect_and_crop_face(img)
         
         # Preprocess: resize, normalize, reshape
-        img = cv2.resize(img, (128, 128))
-        img = img.astype(np.float32) / 255.0
-        img = np.expand_dims(img, axis=0)  # Shape: (1, 128, 128, 3)
+        processed_img = cv2.resize(face_img, (128, 128))
+        processed_img = processed_img.astype(np.float32) / 255.0
+        processed_img = np.expand_dims(processed_img, axis=0)  # Shape: (1, 128, 128, 3)
 
         # Run inference
-        interpreter.set_tensor(input_details[0]['index'], img)
+        interpreter.set_tensor(input_details[0]['index'], processed_img)
         interpreter.invoke()
         prediction = interpreter.get_tensor(output_details[0]['index'])[0][0]
         
@@ -76,7 +126,8 @@ def predict_image(img_path):
             result = "REAL"
             confidence = (1 - float(prediction)) * 100
         
-        logger.info(f"Prediction: {result} | Confidence: {confidence:.2f}% | File: {os.path.basename(img_path)}")
+        face_status = "face_detected" if face_detected else "full_image"
+        logger.info(f"Prediction: {result} | Confidence: {confidence:.2f}% | {face_status} | File: {os.path.basename(img_path)}")
         
         return result, confidence
     

@@ -4,107 +4,238 @@
     <title>My History - TrueFace</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
-            background: linear-gradient(135deg, #c3ecff, #f9f9ff);
+            background: linear-gradient(135deg, #f0f4ff 0%, #e8eef5 50%, #f5f7fa 100%);
             margin: 0;
             padding: 20px;
             min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
         }
 
+        /* Dot grid */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: radial-gradient(circle, rgba(102, 126, 234, 0.12) 1px, transparent 1px);
+            background-size: 30px 30px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Face scan - right */
+        .bg-face-scan {
+            position: fixed;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 340px;
+            height: 430px;
+            opacity: 0.15;
+            z-index: 0;
+            pointer-events: none;
+            animation: floatRight 8s ease-in-out infinite;
+        }
+        @keyframes floatRight {
+            0%, 100% { transform: translateY(-50%) translateX(0); }
+            50% { transform: translateY(-50%) translateX(-8px); }
+        }
+
+        /* Fingerprint - left bottom */
+        .bg-fingerprint {
+            position: fixed;
+            left: -20px;
+            bottom: -20px;
+            width: 380px;
+            height: 380px;
+            opacity: 0.14;
+            z-index: 0;
+            pointer-events: none;
+            animation: rotateSlow 40s linear infinite;
+        }
+        @keyframes rotateSlow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Timeline decoration - left */
+        .bg-timeline {
+            position: fixed;
+            left: 30px;
+            top: 120px;
+            width: 40px;
+            height: calc(100vh - 160px);
+            opacity: 0.18;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Scan line */
+        .bg-scanline {
+            position: fixed;
+            left: 0; top: 0;
+            width: 100%; height: 3px;
+            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.5), rgba(118, 75, 162, 0.5), transparent);
+            z-index: 1;
+            pointer-events: none;
+            animation: scanSweep 5s ease-in-out infinite;
+        }
+        @keyframes scanSweep {
+            0% { top: -3px; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+
+        /* Corner brackets */
+        .corner-deco {
+            position: fixed;
+            width: 100px; height: 100px;
+            opacity: 0.22;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .corner-deco.tl { top: 15px; left: 15px; }
+        .corner-deco.tr { top: 15px; right: 15px; transform: scaleX(-1); }
+        .corner-deco.bl { bottom: 15px; left: 15px; transform: scaleY(-1); }
+        .corner-deco.br { bottom: 15px; right: 15px; transform: scale(-1,-1); }
+
         .navbar {
-            background: white;
+            background: rgba(255, 255, 255, 0.92);
             padding: 15px 25px;
             border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 24px rgba(102, 126, 234, 0.08);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(102, 126, 234, 0.08);
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 25px;
+            position: relative;
+            z-index: 10;
         }
+        .navbar h2 { color: #1a1a2e; margin: 0; }
+        .navbar a { color: #667eea; text-decoration: none; margin-left: 20px; font-weight: 600; transition: color 0.3s ease; }
+        .navbar a:hover { color: #764ba2; }
+        .navbar .logout { color: #e74c3c; }
 
-        .navbar h2 {
-            color: #333;
-            margin: 0;
-        }
+        h1 { text-align: center; color: #1a1a2e; margin-bottom: 25px; font-size: 28px; position: relative; z-index: 10; }
+        h1 span { background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 
-        .navbar a {
-            color: #4a90e2;
-            text-decoration: none;
-            margin-left: 20px;
-            font-weight: 500;
-        }
+        table { width: 100%; border-collapse: collapse; background: rgba(255, 255, 255, 0.92); border-radius: 16px; overflow: hidden; box-shadow: 0 8px 30px rgba(102, 126, 234, 0.08); border: 1px solid rgba(102, 126, 234, 0.06); position: relative; z-index: 10; }
+        th, td { padding: 15px; border-bottom: 1px solid #f0f2f8; text-align: center; }
+        th { background: linear-gradient(135deg, #667eea, #764ba2); color: white; font-weight: 600; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+        tr:hover { background: #f8faff; }
+        td { color: #2c3e50; font-size: 14px; }
+        img { width: 100px; height: 80px; object-fit: cover; border-radius: 10px; border: 1px solid #e8eef5; }
 
-        .navbar a:hover {
-            text-decoration: underline;
-        }
+        .result-real { background: linear-gradient(135deg, #d4edda, #c3e6cb); color: #155724; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 13px; }
+        .result-fake { background: linear-gradient(135deg, #f8d7da, #f5c6cb); color: #721c24; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 13px; }
 
-        .navbar .logout {
-            color: #e74c3c;
-        }
-
-        h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 25px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-        }
-
-        th, td {
-            padding: 15px;
-            border-bottom: 1px solid #eee;
-            text-align: center;
-        }
-
-        th {
-            background: #4a90e2;
-            color: white;
-            font-weight: 600;
-        }
-
-        tr:hover {
-            background: #f8f9fa;
-        }
-
-        img {
-            width: 100px;
-            height: 80px;
-            object-fit: cover;
-            border-radius: 8px;
-        }
-
-        .result-real {
-            background: #d4edda;
-            color: #155724;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-weight: bold;
-        }
-
-        .result-fake {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-weight: bold;
-        }
-
-        .empty {
-            text-align: center;
-            padding: 50px;
-            color: #888;
-        }
+        .empty { text-align: center; padding: 60px 20px; color: #7f8c8d; position: relative; z-index: 10; background: rgba(255, 255, 255, 0.9); border-radius: 16px; box-shadow: 0 8px 30px rgba(102, 126, 234, 0.08); }
+        .empty h3 { color: #2c3e50; margin-bottom: 10px; }
+        .empty a { color: #667eea; font-weight: 700; }
     </style>
 </head>
 <body>
+
+<!-- Scan line -->
+<div class="bg-scanline"></div>
+
+<!-- Corner brackets -->
+<svg class="corner-deco tl" viewBox="0 0 100 100" fill="none">
+    <polyline points="0,35 0,0 35,0" stroke="#667eea" stroke-width="2.5" fill="none"/>
+    <circle cx="5" cy="5" r="3" fill="#667eea" opacity="0.6"/>
+    <text x="10" y="50" fill="#667eea" font-size="7" font-family="monospace" opacity="0.7">LOG</text>
+</svg>
+<svg class="corner-deco tr" viewBox="0 0 100 100" fill="none">
+    <polyline points="0,35 0,0 35,0" stroke="#667eea" stroke-width="2.5" fill="none"/>
+    <circle cx="5" cy="5" r="3" fill="#e74c3c" opacity="0.6"/>
+</svg>
+<svg class="corner-deco bl" viewBox="0 0 100 100" fill="none">
+    <polyline points="0,35 0,0 35,0" stroke="#667eea" stroke-width="2.5" fill="none"/>
+    <circle cx="5" cy="5" r="3" fill="#667eea" opacity="0.6"/>
+</svg>
+<svg class="corner-deco br" viewBox="0 0 100 100" fill="none">
+    <polyline points="0,35 0,0 35,0" stroke="#667eea" stroke-width="2.5" fill="none"/>
+    <circle cx="5" cy="5" r="3" fill="#764ba2" opacity="0.6"/>
+</svg>
+
+<!-- Face scan - right -->
+<svg class="bg-face-scan" viewBox="0 0 200 260" fill="none">
+    <polyline points="20,20 20,5 40,5" stroke="#667eea" stroke-width="2.5" fill="none"/>
+    <polyline points="160,5 180,5 180,20" stroke="#667eea" stroke-width="2.5" fill="none"/>
+    <polyline points="20,240 20,255 40,255" stroke="#667eea" stroke-width="2.5" fill="none"/>
+    <polyline points="160,255 180,255 180,240" stroke="#667eea" stroke-width="2.5" fill="none"/>
+    <ellipse cx="100" cy="120" rx="62" ry="80" stroke="#667eea" stroke-width="1.5"/>
+    <ellipse cx="75" cy="105" rx="15" ry="8" stroke="#667eea" stroke-width="1"/>
+    <ellipse cx="125" cy="105" rx="15" ry="8" stroke="#667eea" stroke-width="1"/>
+    <circle cx="75" cy="105" r="5" fill="#667eea" opacity="0.25"/>
+    <circle cx="125" cy="105" r="5" fill="#667eea" opacity="0.25"/>
+    <path d="M 95 112 Q 100 138 105 112" stroke="#667eea" stroke-width="0.8" fill="none"/>
+    <path d="M 80 150 Q 100 162 120 150" stroke="#667eea" stroke-width="1" fill="none"/>
+    <line x1="30" y1="80" x2="170" y2="80" stroke="#667eea" stroke-width="0.5" stroke-dasharray="6,4"/>
+    <line x1="30" y1="105" x2="170" y2="105" stroke="#667eea" stroke-width="0.5" stroke-dasharray="6,4"/>
+    <line x1="30" y1="130" x2="170" y2="130" stroke="#667eea" stroke-width="0.5" stroke-dasharray="6,4"/>
+    <line x1="30" y1="155" x2="170" y2="155" stroke="#667eea" stroke-width="0.5" stroke-dasharray="6,4"/>
+    <line x1="50" y1="85" x2="75" y2="105" stroke="#667eea" stroke-width="0.5" opacity="0.6"/>
+    <line x1="150" y1="85" x2="125" y2="105" stroke="#667eea" stroke-width="0.5" opacity="0.6"/>
+    <line x1="75" y1="105" x2="100" y2="125" stroke="#667eea" stroke-width="0.4" opacity="0.5"/>
+    <line x1="125" y1="105" x2="100" y2="125" stroke="#667eea" stroke-width="0.4" opacity="0.5"/>
+    <!-- Animated scan bar -->
+    <line x1="25" y1="50" x2="175" y2="50" stroke="#667eea" stroke-width="1.5" opacity="0.6">
+        <animate attributeName="y1" values="50;210;50" dur="3s" repeatCount="indefinite"/>
+        <animate attributeName="y2" values="50;210;50" dur="3s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.6;0.15;0.6" dur="3s" repeatCount="indefinite"/>
+    </line>
+</svg>
+
+<!-- Fingerprint - left bottom -->
+<svg class="bg-fingerprint" viewBox="0 0 200 200" fill="none">
+    <!-- Fingerprint concentric rings -->
+    <ellipse cx="100" cy="100" rx="18" ry="22" stroke="#667eea" stroke-width="0.8" fill="none"/>
+    <ellipse cx="100" cy="100" rx="28" ry="34" stroke="#667eea" stroke-width="0.7" fill="none" stroke-dasharray="5,2"/>
+    <ellipse cx="100" cy="100" rx="38" ry="48" stroke="#764ba2" stroke-width="0.6" fill="none"/>
+    <ellipse cx="100" cy="100" rx="50" ry="62" stroke="#667eea" stroke-width="0.5" fill="none" stroke-dasharray="6,3"/>
+    <ellipse cx="100" cy="100" rx="62" ry="76" stroke="#764ba2" stroke-width="0.5" fill="none"/>
+    <ellipse cx="100" cy="100" rx="74" ry="88" stroke="#667eea" stroke-width="0.4" fill="none" stroke-dasharray="8,4"/>
+    <ellipse cx="100" cy="100" rx="86" ry="98" stroke="#764ba2" stroke-width="0.3" fill="none"/>
+    <!-- Cross markers -->
+    <line x1="100" y1="5" x2="100" y2="195" stroke="#764ba2" stroke-width="0.4" stroke-dasharray="4,6"/>
+    <line x1="5" y1="100" x2="195" y2="100" stroke="#764ba2" stroke-width="0.4" stroke-dasharray="4,6"/>
+    <!-- Corner markers -->
+    <circle cx="100" cy="100" r="5" fill="#667eea" opacity="0.25"/>
+    <circle cx="100" cy="100" r="2" fill="#667eea" opacity="0.5"/>
+    <!-- Identity label -->
+    <rect x="60" y="170" width="80" height="14" rx="3" fill="#667eea" opacity="0.15"/>
+    <text x="68" y="180" fill="#667eea" font-size="8" font-family="monospace" opacity="0.7">IDENTITY</text>
+</svg>
+
+<!-- Timeline decoration - left -->
+<svg class="bg-timeline" viewBox="0 0 30 400" fill="none">
+    <line x1="15" y1="0" x2="15" y2="400" stroke="#667eea" stroke-width="1.5" stroke-dasharray="6,8"/>
+    <circle cx="15" cy="30" r="5" stroke="#667eea" stroke-width="1" fill="none"/>
+    <circle cx="15" cy="30" r="2" fill="#667eea" opacity="0.4"/>
+    <circle cx="15" cy="100" r="5" stroke="#764ba2" stroke-width="1" fill="none"/>
+    <circle cx="15" cy="100" r="2" fill="#764ba2" opacity="0.4"/>
+    <circle cx="15" cy="170" r="5" stroke="#667eea" stroke-width="1" fill="none"/>
+    <circle cx="15" cy="170" r="2" fill="#667eea" opacity="0.4"/>
+    <circle cx="15" cy="240" r="5" stroke="#764ba2" stroke-width="1" fill="none"/>
+    <circle cx="15" cy="240" r="2" fill="#764ba2" opacity="0.4"/>
+    <circle cx="15" cy="310" r="5" stroke="#667eea" stroke-width="1" fill="none"/>
+    <circle cx="15" cy="310" r="2" fill="#667eea" opacity="0.4"/>
+    <circle cx="15" cy="380" r="5" stroke="#764ba2" stroke-width="1" fill="none"/>
+    <circle cx="15" cy="380" r="2" fill="#764ba2" opacity="0.4"/>
+    <!-- Pulsing active node -->
+    <circle cx="15" cy="30" r="8" stroke="#667eea" stroke-width="0.5" fill="none" opacity="0.5">
+        <animate attributeName="r" values="8;14;8" dur="2s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.5;0.1;0.5" dur="2s" repeatCount="indefinite"/>
+    </circle>
+</svg>
 
 <div class="navbar">
     <h2>🧠 TrueFace</h2>
@@ -116,7 +247,7 @@
     </div>
 </div>
 
-<h1>📜 My Upload History</h1>
+<h1>📜 My <span>Upload History</span></h1>
 
 {% if uploads %}
 <table>
@@ -127,11 +258,10 @@
         <th>Confidence</th>
         <th>Date & Time</th>
     </tr>
-
     {% for u in uploads %}
     <tr>
         <td>{{ u[0] }}</td>
-        <td><img src="/uploads/{{ u[1] }}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%2280%22><rect fill=%22%23eee%22 width=%22100%22 height=%2280%22/><text x=%2250%22 y=%2245%22 text-anchor=%22middle%22 fill=%22%23999%22>No Image</text></svg>'"></td>
+        <td><img src="/uploads/{{ u[1] }}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%2280%22><rect fill=%22%23f0f4ff%22 width=%22100%22 height=%2280%22 rx=%228%22/><text x=%2250%22 y=%2245%22 text-anchor=%22middle%22 fill=%22%23999%22 font-size=%2211%22>No Image</text></svg>'"></td>
         <td>
             <span class="{% if u[2] == 'FAKE' %}result-fake{% else %}result-real{% endif %}">
                 {{ u[2] or 'Unknown' }}

@@ -3,141 +3,324 @@
 <head>
     <title>TrueFace - AI Deepfake Detector</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: linear-gradient(135deg, #c3ecff, #f9f9ff);
-            margin: 0;
-            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0f4ff 0%, #e8eef5 50%, #f5f7fa 100%);
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
         }
 
+        /* Dot grid */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: radial-gradient(circle, rgba(102, 126, 234, 0.12) 1px, transparent 1px);
+            background-size: 32px 32px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Face scan - left */
+        .bg-face-scan {
+            position: fixed;
+            left: -10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 400px;
+            height: 500px;
+            opacity: 0.16;
+            z-index: 0;
+            pointer-events: none;
+            animation: floatLeft 8s ease-in-out infinite;
+        }
+        @keyframes floatLeft {
+            0%, 100% { transform: translateY(-50%) translateX(0); }
+            50% { transform: translateY(-50%) translateX(10px); }
+        }
+
+        /* Magnifying glass detector - right bottom */
+        .bg-detector {
+            position: fixed;
+            right: 20px;
+            bottom: 30px;
+            width: 350px;
+            height: 350px;
+            opacity: 0.18;
+            z-index: 0;
+            pointer-events: none;
+            animation: floatRight 9s ease-in-out infinite;
+        }
+        @keyframes floatRight {
+            0%, 100% { transform: translateX(0) rotate(0deg); }
+            50% { transform: translateX(-8px) rotate(2deg); }
+        }
+
+        /* Binary watermark - right edge */
+        .bg-binary {
+            position: fixed;
+            right: 15px; top: 80px;
+            width: 55px;
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            color: #667eea;
+            opacity: 0.15;
+            line-height: 1.8;
+            word-break: break-all;
+            z-index: 0;
+            pointer-events: none;
+            writing-mode: vertical-rl;
+            height: calc(100vh - 100px);
+            overflow: hidden;
+        }
+
+        /* Animated scan line */
+        .bg-scanline {
+            position: fixed;
+            left: 0; top: 0;
+            width: 100%; height: 3px;
+            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.5), rgba(118, 75, 162, 0.5), transparent);
+            z-index: 1;
+            pointer-events: none;
+            animation: scanSweep 5s ease-in-out infinite;
+        }
+        @keyframes scanSweep {
+            0% { top: -3px; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+
+        /* Neural network */
+        .bg-network {
+            position: fixed;
+            left: 0; top: 0; width: 100%; height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Corner brackets */
+        .corner-deco {
+            position: fixed;
+            width: 120px; height: 120px;
+            opacity: 0.22;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .corner-deco.tl { top: 20px; left: 20px; }
+        .corner-deco.tr { top: 20px; right: 20px; transform: scaleX(-1); }
+        .corner-deco.bl { bottom: 20px; left: 20px; transform: scaleY(-1); }
+        .corner-deco.br { bottom: 20px; right: 20px; transform: scale(-1,-1); }
+
         .navbar {
-            background: white;
+            background: rgba(255, 255, 255, 0.92);
             padding: 15px 25px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 14px;
+            box-shadow: 0 4px 24px rgba(102, 126, 234, 0.08);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(102, 126, 234, 0.08);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
+            width: 95%; max-width: 700px;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 10;
         }
-
-        .navbar h2 {
-            color: #333;
-            margin: 0;
-            font-size: 18px;
-        }
-
-        .navbar a {
-            color: #4a90e2;
-            text-decoration: none;
-            margin-left: 15px;
-            font-weight: 500;
-            font-size: 14px;
-        }
-
-        .navbar a:hover {
-            text-decoration: underline;
-        }
-
-        .navbar .logout {
-            color: #e74c3c;
-        }
+        .navbar h2 { color: #1a1a2e; margin: 0; font-size: 18px; }
+        .navbar a { color: #667eea; text-decoration: none; margin-left: 15px; font-weight: 600; font-size: 14px; transition: color 0.3s ease; }
+        .navbar a:hover { color: #764ba2; }
+        .navbar .logout { color: #e74c3c; }
 
         .container {
-            background: white;
-            width: 95%;
-            max-width: 600px;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            background: rgba(255, 255, 255, 0.92);
+            width: 95%; max-width: 600px;
+            padding: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.08);
             text-align: center;
             margin: 0 auto;
+            position: relative;
+            z-index: 10;
         }
+        h1 { color: #1a1a2e; font-size: 28px; margin-top: 0; margin-bottom: 5px; }
+        h1 span { background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .subtitle { color: #7f8c8d; font-size: 14px; margin-bottom: 20px; font-weight: 500; }
 
-        h1 {
-            color: #333;
-        }
+        .upload-box { border: 2px dashed #c5cee0; padding: 25px 15px; border-radius: 14px; cursor: pointer; color: #667eea; font-size: 16px; font-weight: 600; margin-top: 10px; display: block; transition: all 0.3s ease; background: #f8faff; }
+        .upload-box:hover { background: #f0f4ff; box-shadow: 0 4px 20px rgba(102, 126, 234, 0.12); border-color: #667eea; transform: translateY(-2px); }
+        .upload-icon { font-size: 32px; display: block; margin-bottom: 8px; }
+        .upload-hint { font-size: 12px; color: #95a5a6; font-weight: 400; margin-top: 6px; }
+        input[type=file] { display: none; }
 
-        /* Custom File Upload */
-        .upload-box {
-            border: 2px dashed #4a90e2;
-            padding: 15px;
-            border-radius: 10px;
-            cursor: pointer;
-            color: #4a90e2;
-            font-size: 16px;
-            margin-top: 10px;
-            display: block;
-        }
+        button { margin-top: 15px; padding: 14px; width: 100%; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 12px; font-size: 16px; cursor: pointer; font-weight: 700; transition: all 0.3s ease; box-shadow: 0 6px 20px rgba(102, 126, 234, 0.25); position: relative; overflow: hidden; }
+        button::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent); transition: left 0.5s ease; }
+        button:hover::before { left: 100%; }
+        button:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(102, 126, 234, 0.35); }
+        button:disabled { background: #c5cee0; cursor: not-allowed; box-shadow: none; }
 
-        .upload-box:hover {
-            background: #f0f8ff;
-        }
+        .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #fff; border-radius: 50%; border-top-color: transparent; animation: spin 0.8s linear infinite; margin-right: 8px; vertical-align: middle; }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-        input[type=file] {
-            display: none;
-        }
+        #previewImg { width: 100%; max-height: 400px; margin-top: 15px; border-radius: 12px; object-fit: contain; border: 1px solid #e8eef5; display: none; }
 
-        button {
-            margin-top: 15px;
-            padding: 12px;
-            width: 100%;
-            background: #4a90e2;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-        }
+        .result-box { margin-top: 15px; padding: 18px; border-radius: 12px; font-size: 20px; font-weight: bold; }
+        .real { background: linear-gradient(135deg, #d4edda, #c3e6cb); color: #155724; border: 1px solid rgba(21, 87, 36, 0.1); }
+        .fake { background: linear-gradient(135deg, #f8d7da, #f5c6cb); color: #721c24; border: 1px solid rgba(114, 28, 36, 0.1); }
 
-        button:hover {
-            background: #357abd;
-        }
-
-        /* Full Image Preview */
-        #previewImg {
-            width: 100%;
-            max-height: 400px;
-            margin-top: 15px;
-            border-radius: 10px;
-            object-fit: contain;
-            border: 1px solid #ddd;
-            display: none;
-        }
-
-        /* Result Box */
-        .result-box {
-            margin-top: 15px;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 20px;
-            font-weight: bold;
-        }
-
-        .real {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .fake {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        #resetBtn {
-            display: none;
-            background: #555;
-        }
+        #resetBtn { display: none; background: linear-gradient(135deg, #6c757d, #495057); box-shadow: 0 4px 15px rgba(108, 117, 125, 0.2); }
+        .powered-by { margin-top: 20px; font-size: 11px; color: #b0b8c5; font-weight: 600; letter-spacing: 0.5px; }
     </style>
 </head>
 
 <body>
+
+<!-- Animated scan line -->
+<div class="bg-scanline"></div>
+
+<!-- Corner brackets -->
+<svg class="corner-deco tl" viewBox="0 0 120 120" fill="none">
+    <polyline points="0,40 0,0 40,0" stroke="#667eea" stroke-width="2.5" fill="none"/>
+    <polyline points="0,30 0,10 20,10" stroke="#764ba2" stroke-width="1" fill="none" stroke-dasharray="4,3"/>
+    <circle cx="5" cy="5" r="3" fill="#667eea" opacity="0.6"/>
+    <text x="12" y="55" fill="#667eea" font-size="7" font-family="monospace" opacity="0.7">DETECT</text>
+    <text x="12" y="65" fill="#667eea" font-size="7" font-family="monospace" opacity="0.7">MODE</text>
+</svg>
+<svg class="corner-deco tr" viewBox="0 0 120 120" fill="none">
+    <polyline points="0,40 0,0 40,0" stroke="#667eea" stroke-width="2.5" fill="none"/>
+    <circle cx="5" cy="5" r="3" fill="#e74c3c" opacity="0.6"/>
+    <text x="12" y="55" fill="#e74c3c" font-size="7" font-family="monospace" opacity="0.6">ALERT</text>
+</svg>
+<svg class="corner-deco bl" viewBox="0 0 120 120" fill="none">
+    <polyline points="0,40 0,0 40,0" stroke="#667eea" stroke-width="2.5" fill="none"/>
+    <circle cx="5" cy="5" r="3" fill="#667eea" opacity="0.6"/>
+</svg>
+<svg class="corner-deco br" viewBox="0 0 120 120" fill="none">
+    <polyline points="0,40 0,0 40,0" stroke="#667eea" stroke-width="2.5" fill="none"/>
+    <circle cx="5" cy="5" r="3" fill="#764ba2" opacity="0.6"/>
+</svg>
+
+<!-- Face Scan SVG - left -->
+<svg class="bg-face-scan" viewBox="0 0 200 260" fill="none">
+    <polyline points="20,20 20,5 40,5" stroke="#667eea" stroke-width="2.5" fill="none"/>
+    <polyline points="160,5 180,5 180,20" stroke="#667eea" stroke-width="2.5" fill="none"/>
+    <polyline points="20,240 20,255 40,255" stroke="#667eea" stroke-width="2.5" fill="none"/>
+    <polyline points="160,255 180,255 180,240" stroke="#667eea" stroke-width="2.5" fill="none"/>
+    <ellipse cx="100" cy="120" rx="62" ry="80" stroke="#667eea" stroke-width="1.5"/>
+    <ellipse cx="100" cy="120" rx="55" ry="72" stroke="#764ba2" stroke-width="0.5" stroke-dasharray="4,3"/>
+    <ellipse cx="75" cy="105" rx="15" ry="8" stroke="#667eea" stroke-width="1"/>
+    <ellipse cx="125" cy="105" rx="15" ry="8" stroke="#667eea" stroke-width="1"/>
+    <circle cx="75" cy="105" r="5" fill="#667eea" opacity="0.25"/>
+    <circle cx="125" cy="105" r="5" fill="#667eea" opacity="0.25"/>
+    <circle cx="75" cy="105" r="2" fill="#667eea" opacity="0.5"/>
+    <circle cx="125" cy="105" r="2" fill="#667eea" opacity="0.5"/>
+    <path d="M 60 93 Q 75 87 90 93" stroke="#667eea" stroke-width="0.8" fill="none"/>
+    <path d="M 110 93 Q 125 87 140 93" stroke="#667eea" stroke-width="0.8" fill="none"/>
+    <path d="M 95 112 Q 100 138 105 112" stroke="#667eea" stroke-width="0.8" fill="none"/>
+    <line x1="92" y1="135" x2="108" y2="135" stroke="#667eea" stroke-width="0.6"/>
+    <path d="M 80 150 Q 100 162 120 150" stroke="#667eea" stroke-width="1" fill="none"/>
+    <line x1="30" y1="75" x2="170" y2="75" stroke="#667eea" stroke-width="0.5" stroke-dasharray="6,4"/>
+    <line x1="30" y1="105" x2="170" y2="105" stroke="#667eea" stroke-width="0.5" stroke-dasharray="6,4"/>
+    <line x1="30" y1="135" x2="170" y2="135" stroke="#667eea" stroke-width="0.5" stroke-dasharray="6,4"/>
+    <line x1="30" y1="165" x2="170" y2="165" stroke="#667eea" stroke-width="0.5" stroke-dasharray="6,4"/>
+    <line x1="85" y1="120" x2="115" y2="120" stroke="#e74c3c" stroke-width="0.8"/>
+    <line x1="100" y1="105" x2="100" y2="135" stroke="#e74c3c" stroke-width="0.8"/>
+    <circle cx="100" cy="120" r="22" stroke="#e74c3c" stroke-width="0.7" stroke-dasharray="4,3">
+        <animateTransform attributeName="transform" type="rotate" from="0 100 120" to="360 100 120" dur="12s" repeatCount="indefinite"/>
+    </circle>
+    <!-- Data points -->
+    <circle cx="50" cy="85" r="3" fill="#667eea" opacity="0.4"/>
+    <circle cx="150" cy="85" r="3" fill="#667eea" opacity="0.4"/>
+    <circle cx="50" cy="155" r="3" fill="#667eea" opacity="0.4"/>
+    <circle cx="150" cy="155" r="3" fill="#667eea" opacity="0.4"/>
+    <line x1="50" y1="85" x2="75" y2="105" stroke="#667eea" stroke-width="0.5" opacity="0.6"/>
+    <line x1="150" y1="85" x2="125" y2="105" stroke="#667eea" stroke-width="0.5" opacity="0.6"/>
+    <line x1="75" y1="105" x2="100" y2="130" stroke="#764ba2" stroke-width="0.4" opacity="0.5"/>
+    <line x1="125" y1="105" x2="100" y2="130" stroke="#764ba2" stroke-width="0.4" opacity="0.5"/>
+    <!-- Labels -->
+    <rect x="30" y="220" width="60" height="16" rx="3" fill="#667eea" opacity="0.15"/>
+    <text x="36" y="231" fill="#667eea" font-size="8" font-family="monospace" opacity="0.8">AI SCAN</text>
+    <!-- Animated scanning bar -->
+    <line x1="25" y1="50" x2="175" y2="50" stroke="#667eea" stroke-width="1.5" opacity="0.6">
+        <animate attributeName="y1" values="50;210;50" dur="3s" repeatCount="indefinite"/>
+        <animate attributeName="y2" values="50;210;50" dur="3s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.6;0.15;0.6" dur="3s" repeatCount="indefinite"/>
+    </line>
+</svg>
+
+<!-- Magnifying glass / detector SVG - right bottom -->
+<svg class="bg-detector" viewBox="0 0 200 200" fill="none">
+    <!-- Glass circle -->
+    <circle cx="80" cy="80" r="58" stroke="#667eea" stroke-width="2"/>
+    <circle cx="80" cy="80" r="50" stroke="#764ba2" stroke-width="0.6" stroke-dasharray="5,3"/>
+    <circle cx="80" cy="80" r="42" stroke="#667eea" stroke-width="0.3" stroke-dasharray="3,5"/>
+    <!-- Handle -->
+    <line x1="122" y1="122" x2="185" y2="185" stroke="#667eea" stroke-width="5" stroke-linecap="round"/>
+    <line x1="122" y1="122" x2="185" y2="185" stroke="#764ba2" stroke-width="2" stroke-linecap="round" stroke-dasharray="8,6"/>
+    <!-- Face inside magnifying glass -->
+    <ellipse cx="80" cy="78" rx="22" ry="28" stroke="#764ba2" stroke-width="0.8"/>
+    <ellipse cx="72" cy="72" rx="5" ry="3" stroke="#764ba2" stroke-width="0.6"/>
+    <ellipse cx="88" cy="72" rx="5" ry="3" stroke="#764ba2" stroke-width="0.6"/>
+    <circle cx="72" cy="72" r="1.5" fill="#764ba2" opacity="0.4"/>
+    <circle cx="88" cy="72" r="1.5" fill="#764ba2" opacity="0.4"/>
+    <path d="M 76 85 Q 80 89 84 85" stroke="#764ba2" stroke-width="0.5" fill="none"/>
+    <!-- Grid inside glass -->
+    <line x1="40" y1="65" x2="120" y2="65" stroke="#667eea" stroke-width="0.4" stroke-dasharray="3,3"/>
+    <line x1="40" y1="80" x2="120" y2="80" stroke="#667eea" stroke-width="0.4" stroke-dasharray="3,3"/>
+    <line x1="40" y1="95" x2="120" y2="95" stroke="#667eea" stroke-width="0.4" stroke-dasharray="3,3"/>
+    <line x1="65" y1="40" x2="65" y2="120" stroke="#667eea" stroke-width="0.4" stroke-dasharray="3,3"/>
+    <line x1="80" y1="40" x2="80" y2="120" stroke="#667eea" stroke-width="0.4" stroke-dasharray="3,3"/>
+    <line x1="95" y1="40" x2="95" y2="120" stroke="#667eea" stroke-width="0.4" stroke-dasharray="3,3"/>
+    <!-- Detection labels -->
+    <rect x="55" y="45" width="38" height="14" rx="3" stroke="#e74c3c" stroke-width="0.6" fill="none" opacity="0.6"/>
+    <text x="60" y="55" fill="#e74c3c" font-size="8" font-family="monospace" font-weight="bold" opacity="0.7">FAKE?</text>
+    <!-- Confidence bar -->
+    <rect x="32" y="112" width="96" height="5" rx="2" fill="#667eea" opacity="0.1"/>
+    <rect x="32" y="112" width="72" height="5" rx="2" fill="#667eea" opacity="0.2"/>
+    <text x="35" y="126" fill="#667eea" font-size="6" font-family="monospace" opacity="0.6">CONFIDENCE: 87%</text>
+    <!-- Animated rotating ring -->
+    <circle cx="80" cy="80" r="55" stroke="#764ba2" stroke-width="0.5" stroke-dasharray="10,20" fill="none" opacity="0.4">
+        <animateTransform attributeName="transform" type="rotate" from="0 80 80" to="360 80 80" dur="10s" repeatCount="indefinite"/>
+    </circle>
+</svg>
+
+<!-- Binary watermark -->
+<div class="bg-binary">01001001 10110010 01100001 01101110 01101111 01101101 01100001 01101100 01111001 00100000 01000100 01100101 01110100 01100101 01100011 01110100 01100101 01100100 00100000 01000001 01001001 00100000 01010000 01110010 01100101 01100100 01101001 01100011 01110100 01101001 01101111 01101110</div>
+
+<!-- Neural network -->
+<svg class="bg-network" viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid slice">
+    <line x1="80" y1="120" x2="200" y2="200" stroke="#667eea" stroke-width="0.8" opacity="0.1"/>
+    <line x1="200" y1="200" x2="350" y2="150" stroke="#667eea" stroke-width="0.8" opacity="0.1"/>
+    <line x1="200" y1="200" x2="320" y2="350" stroke="#667eea" stroke-width="0.8" opacity="0.08"/>
+    <line x1="350" y1="150" x2="500" y2="250" stroke="#764ba2" stroke-width="0.8" opacity="0.08"/>
+    <line x1="700" y1="100" x2="850" y2="200" stroke="#764ba2" stroke-width="0.8" opacity="0.1"/>
+    <line x1="850" y1="200" x2="900" y2="400" stroke="#764ba2" stroke-width="0.8" opacity="0.08"/>
+    <line x1="600" y1="500" x2="750" y2="450" stroke="#667eea" stroke-width="0.8" opacity="0.08"/>
+    <line x1="750" y1="450" x2="900" y2="400" stroke="#667eea" stroke-width="0.8" opacity="0.1"/>
+    <circle cx="80" cy="120" r="5" fill="#667eea" opacity="0.15"/>
+    <circle cx="200" cy="200" r="6" fill="#667eea" opacity="0.15"/>
+    <circle cx="350" cy="150" r="5" fill="#764ba2" opacity="0.15"/>
+    <circle cx="500" cy="250" r="6" fill="#764ba2" opacity="0.15"/>
+    <circle cx="700" cy="100" r="5" fill="#667eea" opacity="0.15"/>
+    <circle cx="850" cy="200" r="6" fill="#764ba2" opacity="0.15"/>
+    <circle cx="900" cy="400" r="5" fill="#667eea" opacity="0.12"/>
+    <circle cx="600" cy="500" r="4" fill="#764ba2" opacity="0.12"/>
+    <circle cx="750" cy="450" r="5" fill="#667eea" opacity="0.12"/>
+    <circle cx="500" cy="250" r="10" stroke="#764ba2" stroke-width="0.5" fill="none" opacity="0.2">
+        <animate attributeName="r" values="10;18;10" dur="3s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.2;0.05;0.2" dur="3s" repeatCount="indefinite"/>
+    </circle>
+</svg>
 
 <!-- Navigation Bar -->
 <div class="navbar">
@@ -151,31 +334,29 @@
 </div>
 
 <div class="container">
-    <h1>🔍 Check Your Image</h1>
+    <h1>🔍 <span>AI Deepfake</span> Detector</h1>
+    <p class="subtitle">Upload an image to detect if it's real or AI-generated</p>
 
-    <!-- Custom Upload UI -->
     <label class="upload-box">
-        📤 Click to Upload Image
+        <span class="upload-icon">📤</span>
+        Click or Drag to Upload Image
+        <span class="upload-hint">Supports JPG, PNG, GIF, WEBP • Max 5MB</span>
         <input type="file" id="fileInput">
     </label>
 
-    <!-- Full Image Preview -->
     <img id="previewImg">
+    <div style="height:15px;"></div>
 
-    <div style="height:20px;"></div> <!-- GAP -->
-
-    <button onclick="checkImage()">🔍 Check Image</button>
+    <button id="checkBtn" onclick="checkImage()">🔍 Check Image</button>
     <button id="resetBtn" onclick="resetPage()">🔄 Check Another Image</button>
 
-    <!-- Result -->
     <div id="resultBox"></div>
-
+    <div class="powered-by">Powered by AI Neural Network Analysis</div>
 </div>
 
 <script>
 let selectedFile = null;
 
-// Preview Image
 document.getElementById("fileInput").addEventListener("change", function(event) {
     selectedFile = event.target.files[0];
     const reader = new FileReader();
@@ -187,56 +368,53 @@ document.getElementById("fileInput").addEventListener("change", function(event) 
     reader.readAsDataURL(selectedFile);
 });
 
-// Send Image to Flask WITHOUT REFRESH
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+
 function checkImage() {
-    if (!selectedFile) {
-        alert("Please upload an image first!");
-        return;
-    }
+    if (!selectedFile) { alert("Please upload an image first!"); return; }
+    if (!ALLOWED_TYPES.includes(selectedFile.type)) { alert("Invalid file type! Please upload JPG, PNG, GIF or WEBP only."); return; }
+    if (selectedFile.size > MAX_FILE_SIZE) { alert("File too large! Maximum size is 5MB."); return; }
 
     const formData = new FormData();
     formData.append("file", selectedFile);
 
-    // Show loading
+    const checkBtn = document.getElementById("checkBtn");
     const resultBox = document.getElementById("resultBox");
+    checkBtn.disabled = true;
+    checkBtn.innerHTML = '<span class="spinner"></span> Analyzing...';
     resultBox.className = "result-box";
-    resultBox.innerHTML = "⏳ Analyzing image...";
+    resultBox.innerHTML = "🔄 AI is analyzing your image... Please wait.";
 
-    fetch("/predict_api", {
-        method: "POST",
-        body: formData
-    })
-    .then(res => {
-        if (!res.ok) {
-            throw new Error("Server error: " + res.status);
-        }
-        return res.json();
-    })
+    fetch("/predict_api", { method: "POST", body: formData })
+    .then(res => { if (!res.ok) throw new Error("Server error: " + res.status); return res.json(); })
     .then(data => {
+        checkBtn.disabled = false;
+        checkBtn.innerHTML = '🔍 Check Image';
         if (data.error) {
             resultBox.className = "result-box fake";
-            resultBox.innerHTML = "❌ Error: " + data.error;
+            resultBox.innerHTML = "❌ " + data.error;
         } else {
             resultBox.className = "result-box " + (data.result === "FAKE" ? "fake" : "real");
+            const icon = data.result === "FAKE" ? "⚠️" : "✅";
+            const message = data.result === "FAKE" ? "This image appears to be manipulated or AI-generated." : "This image appears to be authentic.";
             resultBox.innerHTML = `
-                <div style="font-size: 24px; margin-bottom: 5px;">
-                    ${data.result === "FAKE" ? "⚠️" : "✅"} ${data.result}
-                </div>
-                <div style="font-size: 14px; opacity: 0.8;">
-                    Confidence: ${data.confidence}
-                </div>
+                <div style="font-size: 28px; margin-bottom: 8px;">${icon} ${data.result}</div>
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 5px;">${data.confidence} Confidence</div>
+                <div style="font-size: 13px; opacity: 0.7;">${message}</div>
             `;
         }
         document.getElementById("resetBtn").style.display = "block";
     })
     .catch(error => {
+        checkBtn.disabled = false;
+        checkBtn.innerHTML = '🔍 Check Image';
         resultBox.className = "result-box fake";
-        resultBox.innerHTML = "❌ Error: " + error.message;
+        resultBox.innerHTML = "❌ Unable to analyze image. Please try again or use a different image.";
         console.error("Error:", error);
     });
 }
 
-// Reset UI
 function resetPage() {
     document.getElementById("previewImg").style.display = "none";
     document.getElementById("resultBox").innerHTML = "";

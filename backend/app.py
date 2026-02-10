@@ -17,7 +17,7 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB max
 
 # Admin usernames (add your admin username here)
-ADMIN_USERS = ['admin', 'hariram']
+ADMIN_USERS = ['admin', 'hariram', 'Hariraam']  # Add your username here
 
 app = Flask(__name__, template_folder=TEMPLATE_FOLDER)
 app.secret_key = os.environ.get('SECRET_KEY', 'deepfake_secret_key_2026')
@@ -151,8 +151,16 @@ def predict_api():
         # Get prediction with confidence
         result, confidence = predict_image(file_path)
         
-        if result == "ERROR":
-            return jsonify({"error": "Failed to process image. Please try another image."}), 500
+        # Handle different error types with user-friendly messages
+        error_messages = {
+            "MODEL_ERROR": "AI model is not ready. Please try again later.",
+            "READ_ERROR": "Unable to read the image. Please upload a valid image file.",
+            "SIZE_ERROR": "Image is too small. Please upload a larger image (minimum 50x50 pixels).",
+            "ERROR": "Failed to analyze image. Please try with a clear face image."
+        }
+        
+        if result in error_messages:
+            return jsonify({"error": error_messages[result]}), 500
 
         # Save in database with user_id
         save_upload(unique_filename, result, confidence, session.get("user_id"))
